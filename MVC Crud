@@ -1,0 +1,558 @@
+package com.conn;
+
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Dbutil {
+Connection con;
+public Connection gConnection() {
+	try {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		con=DriverManager.getConnection("jdbc:mysql://localhost:3307/project1","root", "");
+	} catch (ClassNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	return con;
+	
+}
+}
+
+
+
+package com.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.conn.Dbutil;
+import com.model.User;
+
+import jakarta.servlet.RequestDispatcher;
+
+public class Datadao implements Datadaoi {
+	Dbutil db = new Dbutil();
+	Connection con;
+	@Override
+	public String ins(User u) {
+		con=db.gConnection();
+		try {
+			PreparedStatement psmt=con.prepareStatement("insert into user1(username,password,image)values(?,?,?)");
+			psmt.setString(1, u.getUsername());
+			psmt.setString(2, u.getPassword());
+			psmt.setBytes(3, u.getImage());
+			int i =psmt.executeUpdate();
+			if(i>0) {
+				return "inserted";
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	@Override
+	public List<User> showdata() {
+		con=db.gConnection();
+		ArrayList<User> al=new ArrayList<User>();
+		try {
+			PreparedStatement psmt = con.prepareStatement("select * from user1");
+			ResultSet rs = psmt.executeQuery();
+			User u;
+			while(rs.next()) {
+				u=new User();
+				u.setId(rs.getInt("id"));
+				u.setUsername(rs.getString("username"));
+				u.setPassword(rs.getString("password"));
+				byte[] imageByte=rs.getBytes("image");
+				u.setImage(imageByte);
+				al.add(u);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return al;
+	}
+	@Override
+	public User fetchdata(int id) {
+		con=db.gConnection();
+		User u = new User();
+		try {
+			PreparedStatement psmt = con.prepareStatement("select * from user1 where id =?");
+			psmt.setInt(1, id);
+			ResultSet rs = psmt.executeQuery();
+			while(rs.next()) {
+				u=new User();
+				u.setId(rs.getInt("id"));
+				u.setUsername(rs.getString("username"));
+				u.setPassword(rs.getString("password"));
+				
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return u;
+	}
+	
+	@Override
+	public String updatedata(User u) {
+		con=db.gConnection();
+
+		try {
+			PreparedStatement psmt=con.prepareStatement("update user1 set username=?, password=? where id=?");
+			psmt.setString(1, u.getUsername());
+			psmt.setString(2, u.getPassword());
+			psmt.setInt(3, u.getId());
+			int i = psmt.executeUpdate();
+			if(i>0) {
+				return "Success";
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return null;
+	}
+	@Override
+	public User Loginvalidaion(String username, String password) {
+		con=db.gConnection();
+		User u = new User();
+	
+		try {
+			PreparedStatement psmt = con.prepareStatement("select * from user1 where username=? and password=?");
+			psmt.setString(1, username);
+			psmt.setString(2, password);
+			ResultSet rs = psmt.executeQuery();
+			while(rs.next()) {
+				u.setId(rs.getInt("id"));
+				u.setUsername(rs.getString("username"));
+				u.setPassword(rs.getString("password"));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return u;
+	}
+
+}
+
+
+
+package com.dao;
+
+import java.util.List;
+
+import com.model.User;
+
+public interface Datadaoi {
+	public String ins(User u);
+	
+	public List<User> showdata();
+	
+	public User fetchdata(int id);
+	
+	
+	public String updatedata(User u);
+
+	public User Loginvalidaion(String username, String password);
+}
+
+
+
+
+package com.model;
+
+public class User {
+private int id;
+private String username, password;
+private byte[] image;
+public byte[] getImage() {
+	return image;
+}
+public void setImage(byte[] image) {
+	this.image = image;
+}
+
+public int getId() {
+	return id;
+}
+public void setId(int id) {
+	this.id = id;
+}
+public String getUsername() {
+	return username;
+}
+public void setUsername(String username) {
+	this.username = username;
+}
+public String getPassword() {
+	return password;
+}
+public void setPassword(String password) {
+	this.password = password;
+}
+}
+
+
+
+package com.servlet;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import com.dao.Datadao;
+import com.model.User;
+import jakarta.servlet.annotation.MultipartConfig;
+
+/**
+ * Servlet implementation class Dataservlet
+ */
+@WebServlet("/Dataservlet")
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024,
+    maxFileSize = 5 * 1024 * 1024,
+    maxRequestSize = 10 * 1024 * 1024
+)
+public class Dataservlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+    /**
+     * Default constructor. 
+     */
+    public Dataservlet() {
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String action =request.getParameter("action");
+		String id = request.getParameter("id");
+		if(action.equals("edit")) {
+			Datadao dao = new Datadao();
+			User u = (User) dao.fetchdata(Integer.parseInt(id));
+			if(u!=null) {
+				request.setAttribute("user", u);
+				RequestDispatcher rd = request.getRequestDispatcher("update.jsp");
+				rd.forward(request, response);
+				
+			}
+		}
+		
+		else if(action.equals("Update")) {
+			String username =request.getParameter("name1");
+			String password= request.getParameter("pass1");
+			String id1 = request.getParameter("id");
+			User u = new User();
+			u.setUsername(username);
+			u.setPassword(password);
+			u.setId(Integer.parseInt(id1));
+			
+			Datadao dao = new Datadao();
+			String s = dao.updatedata(u);
+			if(s.equals("Success")) {
+				
+response.sendRedirect("showdata");
+
+			}
+			
+			
+			
+		}
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String username=request.getParameter("name");
+		String password=request.getParameter("pass");
+		Part imagePart = request.getPart("image");
+		InputStream imageStream = imagePart.getInputStream();
+		byte[] imageBytes= imageStream.readAllBytes();
+		User u = new User();
+		u.setUsername(username);
+		u.setPassword(password);
+		u.setImage(imageBytes);
+		Datadao dao = new Datadao();
+		String s = dao.ins(u);
+		if(s.equals("inserted")) {
+			RequestDispatcher rd = request.getRequestDispatcher("Login.jsp");
+			rd.forward(request, response);
+		}
+		doGet(request, response);
+	}
+
+}
+
+
+
+package com.servlet;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import com.dao.Datadao;
+import com.model.User;
+
+/**
+ * Servlet implementation class Loginvalid
+ */
+@WebServlet("/Loginvalid")
+public class Loginvalid extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public Loginvalid() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+
+	/**
+	 * @see HttpServlet#dsuccessoPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		
+		Datadao dao = new Datadao();
+		
+		String username = request.getParameter("name2");
+		String password = request.getParameter("pass2");
+		
+		User us = dao.Loginvalidaion(username, password);
+		System.out.println(us);
+		if(us != null && us.getId() > 0) {
+			
+			response.sendRedirect("showdata");
+		}else {
+			response.sendRedirect("Loginvalidation2.jsp");
+		}
+		
+		
+		
+		doGet(request, response);
+	}
+
+}
+
+
+
+package com.servlet;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
+import com.dao.Datadao;
+import com.model.User;
+
+/**
+ * Servlet implementation class showdata
+ */
+@WebServlet("/showdata")
+public class showdata extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public showdata() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		Datadao dao = new Datadao();
+		List<User> list = dao.showdata();
+		request.setAttribute("user", list);
+		RequestDispatcher rd = request.getRequestDispatcher("show.jsp");
+		rd.forward(request, response);
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+	}
+
+}
+
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<form action="Dataservlet" method="post" enctype="multipart/form-data">
+<h1>Login Form</h1>
+Username<input type="text" name="name"><br>
+Password<input type="password" name="pass"><br>
+<input type="file" name="image">
+<input type="submit" value="Login">
+<a href="showdata">Show Data</a>
+</form>
+</body>
+</html>
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<form action="Loginvalid" method="post">
+<h1>Login Form</h1>
+Username<input type="text" name="name2"><br>
+Password<input type="password" name="pass2"><br>
+<input type="submit" value="Login" name ="action">
+Already User?<a href="Login.jsp">Register</a>
+</form>
+</body>
+</html>
+
+
+<%@page import="com.model.User"%>
+<%@page import="java.util.List"%>
+<%@ page import="java.util.Base64" %>
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Show User Data</title>
+</head>
+<body>
+
+<%
+    List<User> list = (List<User>) request.getAttribute("user");
+%>
+
+<h2>User List</h2>
+
+<table border="1" >
+<tr>
+    <th>Id</th>
+    <th>Username</th>
+    <th>Password</th>
+    <th>Image</th>
+    <th>Edit</th>
+    <th>Delete</th>
+</tr>
+
+<%
+if (list != null) {
+    for (User u1 : list) {
+        String base64Image = "";
+        byte[] imageBytes = u1.getImage();
+        if (imageBytes != null) {
+            base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        }
+%>
+    <tr>
+        <td><%= u1.getId() %></td>
+        <td><%= u1.getUsername() %></td>
+        <td><%= u1.getPassword() %></td>
+        <td>
+            <% if (!base64Image.isEmpty()) { %>
+                <img src="data:image/jpeg;base64,<%= base64Image %>" width="100" height="100"/>
+            <% } else { %>
+                No Image
+            <% } %>
+        </td>
+        <td><a href="Dataservlet?action=edit&id=<%= u1.getId() %>">Edit</a></td>
+        <td><a href="Dataservlet?action=delete&id=<%= u1.getId() %>">Delete</a></td>
+    </tr>
+<%
+    }
+}
+%>
+
+</table>
+
+</body>
+</html>
+
+
+
+<%@page import="com.model.User"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%User u = (User)request.getAttribute("user"); %>
+<form action="Dataservlet" method="get">
+<h1>Login Form</h1>
+Username<input type="text" name="name1" value=<%=u.getUsername() %>><br>
+Password<input type="text" name="pass1" value =<%=u.getPassword() %>><br>
+<input type="hidden" name = "id" value=<%=u.getId() %>>
+<input type="submit" value="Update" name="action">
+
+</form>
+</body>
+</html>
