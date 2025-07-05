@@ -1,0 +1,433 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Form-v5 by Colorlib</title>
+	<!-- Mobile Specific Metas -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<!-- Font-->
+	<link rel="stylesheet" type="text/css" href="css/roboto-font.css">
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-5/css/fontawesome-all.min.css">
+	<!-- Main Style Css -->
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="form-v5">
+	<div class="page-content">
+		<div class="form-v5-content">
+			<form class="form-detail" action="insertdata.jsp" method="post">
+				<h2>Register Account Form</h2>
+				<div class="form-row">
+					<label for="full-name">Full Name</label>
+					<input type="text" name="full-name" id="full-name" class="input-text" placeholder="Your Name" required>
+					<i class="fas fa-user"></i>
+				</div>
+				<div class="form-row">
+					<label for="your-email">Your Email</label>
+					<input type="text" name="your-email" id="your-email" class="input-text" placeholder="Your Email" required pattern="[^@]+@[^@]+.[a-zA-Z]{2,6}">
+					<i class="fas fa-envelope"></i>
+				</div>
+				<div class="form-row">
+					<label for="password">Password</label>
+					<input type="password" name="password" id="password" class="input-text" placeholder="Your Password" required>
+					<i class="fas fa-lock"></i>
+				</div>
+				<div class="form-row-last">
+					<input type="submit" name="register" class="register" value="Register">
+				</div>
+			</form>
+		</div>
+	</div>
+</body><!-- This templates was made by Colorlib (https://colorlib.com) -->
+</html>
+</body>
+</html>
+
+
+<%@page import="com.connection.Sql_connect"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+Sql_connect  sql=new Sql_connect();
+Connection con;
+con=sql.gConnection();
+out.println(con);
+String name=request.getParameter("full-name");
+String email=request.getParameter("your-email");
+String password=request.getParameter("password");
+
+PreparedStatement psmt = con.prepareStatement("insert into application (Fullname,Email,Password)values(?,?,?)");
+psmt.setString(1, name);
+psmt.setString(2, email);
+psmt.setString(3, password);
+int i = psmt.executeUpdate();
+if(i>0){
+	response.sendRedirect("Showdata.jsp");
+}
+
+
+%>
+</body>
+</html>
+
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<head>
+	<meta charset="utf-8">
+	<title>Form-v5 by Colorlib</title>
+	<!-- Mobile Specific Metas -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<!-- Font-->
+	<link rel="stylesheet" type="text/css" href="css/roboto-font.css">
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-5/css/fontawesome-all.min.css">
+	<!-- Main Style Css -->
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="form-v5">
+	<div class="page-content">
+		<div class="form-v5-content">
+			<form class="form-detail" action="login_validation.jsp" method="post">
+				<h2>Login Form</h2>
+				
+				<div class="form-row">
+					<label for="your-email">Your Email</label>
+					<input type="text" name="your-email" id="your-email" class="input-text" placeholder="Your Email">
+					<i class="fas fa-envelope"></i>
+				</div>
+				<div class="form-row">
+					<label for="password">Password</label>
+					<input type="password" name="password" id="password" class="input-text" placeholder="Your Password">
+					<i class="fas fa-lock"></i>
+				</div>
+				<div class="form-row-last">
+					<input type="submit" name="login" class="register" value="Login">
+					Already User ?<a href="home.jsp">Sign up </a>
+				</div>
+			</form>
+		</div>
+	</div>
+</body>
+</html>
+
+
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<table border="1">
+<tr>
+<th> ID</th>
+<th> Fullname</th>
+<th> Email</th>
+<th>Password</th>
+</tr>
+<%
+Sql_connect  sql=new Sql_connect();
+Connection con;
+con=sql.gConnection();
+PreparedStatement psmt = con.prepareStatement("select * from application");
+ResultSet rs= psmt.executeQuery();
+while(rs.next()){
+	%>
+	<tr>
+	<td> <%=rs.getInt(1) %></td>
+	<td><%=rs.getString("Fullname") %></td>
+	<td><%=rs.getString("Email") %></td>
+	<td><%=rs.getString("Password") %></td>
+	<td><a href="Editdata.jsp?name=edit&id=<%=rs.getInt(1)%>">Edit</a></td>
+	<td><a href="Deletedata.jsp?name=delete&id=<%=rs.getInt(1) %>">Delete</a></td>
+	</tr>
+	<%
+}
+%>
+
+</table>
+
+
+</body>
+</html>
+
+
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+Sql_connect sql = new Sql_connect();
+Connection con;
+con = sql.gConnection();
+String email=request.getParameter("your-email");
+String password=request.getParameter("password");
+PreparedStatement psmt = con.prepareStatement("select * from application where Email =? and Password=?");
+psmt.setString(1, email);
+psmt.setString(2, password);
+ResultSet rs = psmt.executeQuery();
+Boolean b = rs.next();
+if(b==true){
+	response.sendRedirect("Showdata.jsp");
+}
+else{
+	response.sendRedirect("Login.jsp");
+}
+
+
+	
+
+%>
+
+
+</body>
+</html>
+
+
+
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+String id = request.getParameter("id");
+Sql_connect sql = new Sql_connect();
+Connection con;
+con = sql.gConnection();
+PreparedStatement psmt = con.prepareStatement("select * from application where id =?");
+int i = Integer.parseInt(id);
+psmt.setInt(1, i);
+ResultSet rs = psmt.executeQuery();
+while(rs.next()){
+	
+	%>
+	<form action="update.jsp" method="post">
+	<table>
+	<tr>
+	<td>
+	<input type="hidden" value="<%=rs.getInt(1)%>" name="id">
+	</td>
+	</tr>
+	<tr>
+		<td>Fullname</td>
+		<td><input type="text" value="<%=rs.getString("Fullname")%>" name ="fullname"></td>
+	</tr>
+	<tr>
+		<td>Email</td>
+	<td><input type="text" value="<%=rs.getString("Email")%>" name ="email"></td>
+	</tr>
+	<tr>
+		<td>Password</td>
+		<td><input type="text" value="<%=rs.getString("Password")%>"name ="pass"></td>	
+	</tr>
+	<tr>
+	<td><input type="submit" value="update"></td>
+	</tr>	
+	
+<%	
+}
+%>
+</form>
+</table>
+</body>
+</html>
+
+
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+Sql_connect sql = new Sql_connect();
+Connection con;
+con = sql.gConnection();
+String id1 = request.getParameter("id");
+int i = Integer.parseInt(id1);
+String name =request.getParameter("fullname");
+String email1 = request.getParameter("email");
+String password = request.getParameter("pass");
+
+PreparedStatement psmt = con.prepareStatement("update application set Fullname=?, Email=?, Password=? where id =?");
+psmt.setString(1, name);
+psmt.setString(2, email1);
+psmt.setString(3, password);
+psmt.setInt(4, i);
+int j = psmt.executeUpdate();
+if(j>0){
+	response.sendRedirect("Showdata.jsp");
+}
+
+%>
+</body>
+</html>
+
+
+
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+Sql_connect sql = new Sql_connect();
+Connection con;
+con = sql.gConnection();
+String id1= request.getParameter("id");
+int j = Integer.parseInt(id1);
+PreparedStatement psmt = con.prepareStatement("delete from application where id = ?");
+psmt.setInt(1, j);
+psmt.executeUpdate();
+if(j>0){
+	response.sendRedirect("Showdata.jsp");
+}
+
+%>
+</body>
+</html>
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<jsp:forward page="param_action.jsp">
+<jsp:param value="test" name="username"/>
+<jsp:param value="123" name="password"/>
+
+</jsp:forward>
+</body>
+</html>
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<form action="usebean.jsp" method="post">
+id<input type="text" name="id">
+Username<input type="text" name="username">
+Password<input type="password" name="password">
+<input type="submit" value="Ok">
+</form>
+</body>
+</html>
+
+
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="com.connection.Sql_connect"%>
+<%@page import="java.io.PrintWriter"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+Sql_connect sql = new Sql_connect();
+Connection con;
+con=sql.gConnection();
+PrintWriter out1 = response.getWriter();
+String username=request.getParameter("username");
+String password=request.getParameter("password");
+out1.println(username+" "+password);
+PreparedStatement psmt = con.prepareStatement("insert into action(Username,Password)values(?,?)");
+psmt.setString(1, username);
+psmt.setString(2, password);
+psmt.executeUpdate();
+%>
+</body>
+</html>
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<jsp:useBean id="user" class="com.connection.Bean"></jsp:useBean>
+<jsp:setProperty property="*" name="user"/>
+<jsp:getProperty property="id" name="user"/>
+<jsp:getProperty property="username" name="user"/>
+<jsp:getProperty property="password" name="user"/>
+</body>
+</html>
